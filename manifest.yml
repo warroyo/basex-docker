@@ -37,10 +37,13 @@ spec:
           initialDelaySeconds: 10
           timeoutSeconds: 2
           periodSeconds: 5
+      
         volumeMounts:
         - mountPath: /srv/basex/data
           name: basex-vol
       restartPolicy: Always
+      securityContext:
+        fsGroup: 1984
   volumeClaimTemplates:
   - metadata:
       name: basex-vol
