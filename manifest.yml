@@ -1,0 +1,72 @@
+apiVersion: apps/v1beta2
+kind: StatefulSet
+metadata:
+  name: basex
+spec:
+  selector:
+    matchLabels:
+      app: basex
+  replicas: 1
+  serviceName: bassex-server
+  template:
+    metadata:
+      labels:
+        app: basex
+    spec:
+      containers:
+      - env:
+        image: "warroyo90/basex:9.1.2"
+        imagePullPolicy: IfNotPresent
+        name: basex
+        ports:
+        - containerPort: 1984
+          name: db
+        - containerPort: 8984
+          name: http
+        - containerPort: 8985
+          name: http-stop
+        readinessProbe:
+          tcpSocket:
+           port: 8984
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+          periodSeconds: 5
+        livenessProbe:
+          tcpSocket:
+           port: 8984
+          initialDelaySeconds: 10
+          timeoutSeconds: 2
+          periodSeconds: 5
+        volumeMounts:
+        - mountPath: /srv/basex/data
+          name: basex-vol
+      restartPolicy: Always
+  volumeClaimTemplates:
+  - metadata:
+      name: basex-vol
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi
+      storageClassName: standard
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: basex-server
+spec:
+  type: LoadBalancer
+  ports:
+  - name: db
+    port: 1984
+    targetPort: 1984
+  - name: http
+    port: 8984
+    targetPort: 8984
+  - name: http-stop
+    port: 8985
+    targetPort: 8985
+  selector:
+    app: basex
